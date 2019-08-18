@@ -26,7 +26,7 @@ $APPLICATION->SetPageProperty("description", "Интернет-магазин ш
 <p>
 	 Подробнее по телефону +7 (495) 256 - 08 - 66
 </p>
-<img style="float: right; max-width: 60%; margin-left: 80px;" src="<?=SITE_TEMPLATE_PATH?>/images/delivery_car.png" title="Доставка шин и дисков" alt="Доставка шин и дисков" />
+<img style="float: right; max-width: 60%; margin-left: 80px;" src="<?=SITE_TEMPLATE_PATH?>/images/delivery-car--new.jpg" title="Доставка шин и дисков" alt="Доставка шин и дисков" />
 <p>
 	 В высокий сезон продаж, доставка может осуществляться на следующий день или через день, в зависимости от укомплектованности автомобилей. Мы приложим все усилия, чтобы доставить Ваш заказ в самые кратчайшие сроки.
 </p>
