@@ -1,0 +1,711 @@
+<?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true) die();?>
+
+
+<script type="text/javascript">
+	$(function(){
+		$('.main-fotos li').hide().first().show();
+		$('.fotos-thumbs li').first().addClass('cur');
+		$('.fotos-thumbs ').delegate('li:not(.cur)', 'click', function() {
+			$(this).addClass('cur').siblings().removeClass('cur')
+			.parents('.module-fotos').find('.main-fotos li').eq($(this).index()).addClass('visible').fadeIn().siblings('li').removeClass('visible').fadeOut();
+		})
+	})
+</script>
+
+<?
+	$images=array();
+	$images=(!empty($arResult["PROPERTIES"]["OTHER_PHOTO"]["VALUE"]))? $arResult["PROPERTIES"]["OTHER_PHOTO"]["VALUE"] : $arResult["SECTION_FULL"]["UF_MORE_FILES"];
+	if(!empty($arResult["SECTION_FULL"]["DETAIL_PICTURE"]) && empty($arResult["DETAIL_PICTURE"]))
+		{array_unshift($images, $arResult["SECTION_FULL"]["DETAIL_PICTURE"]);}
+	elseif(!empty($arResult["DETAIL_PICTURE"]))
+		{array_unshift($images, $arResult["DETAIL_PICTURE"]["ID"]);}
+	else{$images=array();}
+	foreach ($images as $key=>$image) { if (!$image) {unset($images[$key]);} }
+	
+	$productsMeasure = GetMessage("MEASURE_DEFAULT");
+	if ($arResult["PROPERTIES"]["CML2_BASE_UNIT"]["VALUE"])
+	{$productsMeasure = $arResult["PROPERTIES"]["CML2_BASE_UNIT"]["VALUE"];}
+	$productsMeasure.=".";
+?>
+
+<article class="article-product no-pl detail">
+
+	<div class="module-fotos<?if(count($images)>1):?> more_files_block<?endif;?>">
+		<div class="ribbons">
+			 <?if( $arResult["PROPERTIES"]["KHIT_PRODAZH"]["VALUE"]):?><span class="ribon-hit"></span><?endif;?>
+			<?if( $arResult["PROPERTIES"]["NOVINKA"]["VALUE"]):?><span class="ribon-new"></span><?endif;?>
+			<?if( $arResult["PROPERTIES"]["AKTSIYA"]["VALUE"]):?><span class="ribon-share"></span><?endif;?>
+		</div>
+		
+		<?if( !empty( $images ) ){?>
+			<?$img_big = CFile::ResizeImageGet( $arResult["DETAIL_PICTURE"], array( "width" => 284, "height" => 284 ), BX_RESIZE_IMAGE_PROPORTIONAL_ALT, true );?>
+			<ul class="main-fotos">
+				<?foreach($images as $arPhoto){?>
+					<?$img_photo_big = CFile::ResizeImageGet( $arPhoto, array( "width" => 284, "height" => 284 ), BX_RESIZE_IMAGE_PROPORTIONAL_ALT, true);?>
+					<?$img_photo_main = CFile::ResizeImageGet( $arPhoto, array( "width" => 800, "height" => 600 ), BX_RESIZE_IMAGE_PROPORTIONAL_ALT, true);?>
+					<li>
+						<a class="fancy" data-fancybox-group="t"   href="<?=$img_photo_main["src"]?>">
+							<span class="zoom"><i></i></span>
+							<img src="<?=$img_photo_big["src"]?>" alt="<?=$arResult["NAME"]?>" title="<?=$arResult["NAME"]?>" />
+						</a>
+					</li>
+				<?}?>
+			</ul>			
+
+			<?if(count($images)>1){?>
+				<ul class="fotos-thumbs">
+					<?foreach($images as $arPhoto){?>
+						<?$img_photo_small = CFile::ResizeImageGet( $arPhoto, array( "width" => 67, "height" => 67 ), BX_RESIZE_IMAGE_PROPORTIONAL_ALT, true, array() );?>
+						<li>
+							<div class="triangle"></div>
+							<a><span class="helper"></span>
+								<img src="<?=$img_photo_small["src"]?>" alt="<?=$arResult["NAME"]?>" title="<?=$arResult["NAME"]?>" />
+							</a>
+						</li>
+					<?}?>
+				</ul>
+				
+				
+				<script>
+					$(document).ready(function()
+					{
+						$('.main-fotos li').hide().first().show();
+						$('.fotos-thumbs li').first().addClass('cur');
+						$('.fotos-thumbs ').delegate('li:not(.cur)', 'click', function() 
+						{
+							$(this).parents('.module-fotos').find('.main-fotos li').removeClass('visible').hide();
+							$(this).addClass('cur').siblings().removeClass('cur').parents('.module-fotos').find('.main-fotos li').eq($(this).index()).addClass('visible').show();
+						})	
+						$('.fotos-thumbs').bxSlider({
+							mode: 'vertical',
+							autoHover: true,
+							touchEnabled: true,
+							oneToOneTouch: true,
+							preventDefaultSwipeX: true,
+							preventDefaultSwipeY: false,
+							slideWidth: 75,
+							minSlides: 3,
+							slideMargin: 10,
+							infiniteLoop: false,
+							hideControlOnEnd: true,
+							pager: true
+						});
+						if ($(".bx-wrapper .bx-pager-link").length<=1) { $(".bx-wrapper .bx-controls-direction").hide(); }
+					});
+				</script>
+			<?}?>
+			
+			
+		<?}elseif(!empty($arResult["DETAIL_PICTURE"])){?>
+			<ul class="main-fotos">
+				<?$img = CFile::ResizeImageGet( $arResult["DETAIL_PICTURE"], array( "width" => 284, "height" => 284 ), BX_RESIZE_IMAGE_PROPORTIONAL_ALT, true, array() );?>
+				<li>
+					<a class="fancy" data-fancybox-group="t"  href="<?=$arResult["DETAIL_PICTURE"]["SRC"]?>">
+						<span class="zoom"><i></i></span>
+						<img src="<?=$img["src"]?>" alt="<?=$arResult["NAME"]?>" title="<?=$arResult["NAME"]?>" class="main_img" />
+					</a>
+				</li>
+			</ul>
+		<?}else{?>
+			<?$arSection = CIBlockSection::GetList(array(), array( "IBLOCK_ID" => $arResult["IBLOCK_ID"], "ID" => $arResult["IBLOCK_SECTION_ID"] ), false, array( "ID", "DETAIL_PICTURE", "PICTURE"))->GetNext();?>	
+			<ul class="main-fotos"><li>
+				<?if( !empty($arSection["DETAIL_PICTURE"])){?>
+					<?$img = CFile::ResizeImageGet($arSection["DETAIL_PICTURE"], array( "width" => 284, "height" => 284 ), BX_RESIZE_IMAGE_PROPORTIONAL,true );?>
+					<a class="fancy" data-fancybox-group="t"   href="<?=CFile::GetPath($arSection["DETAIL_PICTURE"])?>">
+						<span class="zoom"><i></i></span>
+						<img src="<?=$img["src"]?>" alt="<?=$arResult["NAME"]?>" title="<?=$arResult["NAME"]?>" />	
+					</a>
+				<?}elseif( !empty($arSection["PICTURE"])){?>
+					<?$img = CFile::ResizeImageGet($arSection["PICTURE"], array( "width" => 284, "height" => 284 ), BX_RESIZE_IMAGE_PROPORTIONAL,true );?>
+					<a class="fancy" data-fancybox-group="t"   href="<?=CFile::GetPath($arSection["PICTURE"])?>">
+						<span class="zoom"><i></i></span>
+						<img src="<?=$img["src"]?>" alt="<?=$arResult["NAME"]?>" title="<?=$arResult["NAME"]?>" />	
+					</a>						
+				<?}else{?>
+					<img src="<?=SITE_TEMPLATE_PATH?>/images/noimage_big.png" alt="<?=$arResult["NAME"]?>" width="284" height="284" title="<?=$arResult["NAME"]?>" />
+				<?}?>
+			</li></ul>
+		<?}?>
+	</div>
+	
+
+	
+	<div class="info detail <?if(count($images)>1):?> more_files_block<?endif;?>">
+		<table class="info-main-block"><tr><td class="info-main-block-top">
+			<div class="info-top">
+				<?if ($arParams["USE_RATING"]=="Y"){?>
+					<div class="rating">
+						<div class="rating-wrapp">
+							<?if ($arResult["SECTION_FULL"]["DEPTH_LEVEL"]==2){?>
+								<?$APPLICATION->IncludeComponent(
+								   "aspro:iblock.vote",
+								   "section_rating",
+								   Array(
+									  "IBLOCK_TYPE" => $arParams["IBLOCK_TYPE"],
+									  "IBLOCK_ID" => $arResult["IBLOCK_ID"],
+									  "ELEMENT_ID" =>$arResult["IBLOCK_SECTION_ID"],
+									  "MAX_VOTE" => 5,
+									  "VOTE_NAMES" => array(),
+									  "CACHE_TYPE" => $arParams["CACHE_TYPE"],
+									  "CACHE_TIME" => $arParams["CACHE_TIME"],
+									  "DISPLAY_AS_RATING" => 'vote_avg'
+								   ),
+								   $component, array("HIDE_ICONS" =>"Y")
+								);?>		
+							<?} elseif ($arResult["SECTION_FULL"]["DEPTH_LEVEL"]==1){?>
+								<?$APPLICATION->IncludeComponent(
+								   "bitrix:iblock.vote",
+								   "element_rating",
+								   Array(
+									  "IBLOCK_TYPE" => $arParams["IBLOCK_TYPE"],
+									  "IBLOCK_ID" => $arResult["IBLOCK_ID"],
+									  "ELEMENT_ID" =>$arResult["ID"],
+									  "MAX_VOTE" => 5,
+									  "VOTE_NAMES" => array(),
+									  "CACHE_TYPE" => $arParams["CACHE_TYPE"],
+									  "CACHE_TIME" => $arParams["CACHE_TIME"],
+									  "DISPLAY_AS_RATING" => 'vote_avg'
+								   ),
+								   $component, array("HIDE_ICONS" =>"Y")
+								);?>
+							<?}?>
+						</div>
+					</div>
+				<?}?>
+				<div class="manufacturer-logo">
+					<a href="<?=$arResult["PROPERTIES"]["PROIZVODITEL"]["LINK"]?>">
+						<?if( !empty( $arResult["PROPERTIES"]["PROIZVODITEL"]["SRC"] ) ):?>
+							<img src="<?=$arResult["PROPERTIES"]["PROIZVODITEL"]["SRC"]?>" alt="<?=$arResult["PROPERTIES"]["PROIZVODITEL"]["NAME"]?>" title="<?=$arResult["PROPERTIES"]["PROIZVODITEL"]["NAME"]?>" />
+						<?else:?>
+							<?=$arResult["PROPERTIES"]["PROIZVODITEL"]["VALUE"]["NAME"]?>
+						<?endif;?>
+					</a>
+				</div>
+			</div>
+		
+			
+				<div class="info-left">
+					<div class="options">
+						<ul class="list">
+							<?foreach ($arParams["MATCHING_ELEMENT_PROPERTIES"] as $key => $property):?>
+								<?
+									$measure = "";
+									if (($key == "POSADOCHNYY_DIAMETR_DISKA")||($key == "SHIRINA_DISKA")||($key == "POSADOCHNYY_DIAMETR")){$measure = "&Prime;";} 
+									elseif ($key == "POSADOCHNYY_DIAMETR" || $key == "VYSOTA_PROFILYA"){$measure = " %";}
+									elseif ($key == "COUNT_OTVERSTIY"){$measure = GetMessage("PIECES");}
+									elseif ($key == "RUN_ON_FLAT"){$measure = "";}
+									else {$measure = GetMessage("MILLIMETERS");}
+								?>
+								<?if (array_key_exists($property,$arResult["DISPLAY_PROPERTIES"])&&!empty($arResult["DISPLAY_PROPERTIES"][$property]["VALUE"])){?>
+									<li>
+										<span class="key">
+											<?if($key==$arParams["MATCHING_ELEMENT_PROPERTIES"]["RUN_ON_FLAT"]){?>
+												<span><?=$arResult["DISPLAY_PROPERTIES"][$arParams["MATCHING_ELEMENT_PROPERTIES"]["RUN_ON_FLAT"]]["NAME"]?></span>
+											<?}else{?>
+												<span><?=GetMessage($key);?></span>
+											<?}?>
+										</span>
+										<span class="value">
+											<?if (($key=="SEZONNOST")||($key=="SHIPY") || ($key==$arParams["MATCHING_ELEMENT_PROPERTIES"]["RUN_ON_FLAT"])):?>
+												<?if($key=="SEZONNOST"):?>
+													<?
+														$seasonClass = "";
+														if (trim($arResult["DISPLAY_PROPERTIES"][$property]["VALUE"])==trim(COption::GetOptionString("aspro.tires", "SUMMER_ICON", "", SITE_ID))) { $seasonClass = "summer"; }
+														elseif (trim($arResult["DISPLAY_PROPERTIES"][$property]["VALUE"])==trim(COption::GetOptionString("aspro.tires", "WINTER_ICON", "", SITE_ID))) { $seasonClass = "winter"; }
+														elseif (trim($arResult["DISPLAY_PROPERTIES"][$property]["VALUE"])==trim(COption::GetOptionString("aspro.tires", "ALL_SEASON_ICON", "", SITE_ID))) { $seasonClass = "all-seasons"; }
+													?>
+													<?if (strlen($seasonClass)):?>
+														<span class="markers"><span class="marker-<?=$seasonClass;?>"></span></span><?=GetMessage(strtoupper($seasonClass)."_SECTION")?>
+													<?else:?>
+														<?=trim($arResult["DISPLAY_PROPERTIES"][$property]["VALUE"])?>
+													<?endif;?>
+												<?elseif (($key=="SHIPY")&&$arResult["DISPLAY_PROPERTIES"][$property]["VALUE"]):?>
+													<span class="markers"><span class="marker-ship"></span></span><?=GetMessage("YES")?>
+												<?elseif (($key==$arParams["MATCHING_ELEMENT_PROPERTIES"]["RUN_ON_FLAT"])&&$arResult["DISPLAY_PROPERTIES"][$property]["VALUE"]):?>
+													<span class="markers"><span class="marker-rnf"></span></span><?=GetMessage("YES")?>
+												<?endif;?>
+											<?else:?>
+												<?=$arResult["DISPLAY_PROPERTIES"][$property]["VALUE"]?><?=(($measure==GetMessage("MILLIMETERS"))||($measure==GetMessage("PIECES"))) ? "&nbsp;" : "";?><?=$measure;?>
+											<?endif;?>
+										</span>
+									</li>
+								<?}?>
+							<?endforeach;?>
+							<?foreach ($arResult["DISPLAY_PROPERTIES"] as $key => $property):?>
+								<div style="display: none;">
+
+								</div>
+								
+								<?if(!empty($property["VALUE"]) && !array_key_exists($property["CODE"],$arParams["MATCHING_ELEMENT_PROPERTIES"]) && (!in_array($property["CODE"], array("KHIT_PRODAZH", "NOVINKA", "AKTSIYA", "VIDEO_YOUTUBE", "RELATED_ITEMS")))):?>
+									<li>
+										<span class="key"><span><?=$property["NAME"];?></span></span>
+										<span class="value">
+											<?=$property["VALUE"]?>
+										</span>
+									</li>
+								<?endif;?>
+								
+							<?endforeach;?>
+						</ul>
+					</div>
+				</div>
+			
+				<div class="info-right">
+					<?if($arResult["PROPERTIES"]["CML2_ARTICLE"]["VALUE"]){?>
+						<div class="articul"><?=GetMessage("ARTICUL")?> <span class="value"><?=$arResult["PROPERTIES"]["CML2_ARTICLE"]["VALUE"]?></span></div>
+					<?} 
+						$totalCount = 0;
+						//if( count( $arResult["OFFERS"] ) ) { foreach( $arResult["OFFERS"] as $key => $arOffer ){$totalCount+=$arOffer["CATALOG_QUANTITY"];} }
+						if( count( $arResult["PRICES"] ) )	{ $totalCount=$arResult["CATALOG_QUANTITY"]; }
+					?>
+					
+					<?if ($arParams["USE_STORE"]=="Y"){?>
+						<div class="availability-row">
+							<div class="label">
+								<?if($totalCount){?>
+									<?
+										$sMeasure = GetMessage("MEASURE_DEFAULT").".";
+										if ($arResult["PROPERTIES"]["CML2_BASE_UNIT"]["VALUE"]) { $sMeasure = $arResult["PROPERTIES"]["CML2_BASE_UNIT"]["VALUE"]."."; }
+										$amount = $totalCount;
+										$indicators = 0;
+										if(($arParams["USE_MIN_AMOUNT"] == 'Y')&&($arParams["USE_ONLY_MAX_AMOUNT"]=="Y"))
+										{
+											if(intval($amount) > $arParams["MAX_AMOUNT"]) { $amount = GetMessage("MANY_GOODS"); $indicators = 3; }
+											elseif(intval($amount) >= $arParams["MIN_AMOUNT"]) { $amount = $totalCount.'&nbsp;'.$sMeasure; $indicators = 2; }
+											elseif(intval($amount) < $arParams["MIN_AMOUNT"]) { $amount =$totalCount.'&nbsp;'.$sMeasure; $indicators = 1; }
+										}
+										elseif($arParams["USE_MIN_AMOUNT"] == 'Y')
+										{	
+											if(intval($amount) > $arParams["MAX_AMOUNT"]) { $amount = GetMessage("MANY_GOODS"); $indicators = 3; }
+											elseif(intval($amount) >= $arParams["MIN_AMOUNT"]) { $amount = GetMessage("SUFFICIENT_GOODS"); $indicators = 2; }
+											elseif(intval($amount) < $arParams["MIN_AMOUNT"]) { $amount = GetMessage("FEW_GOODS"); $indicators = 1; }
+										}
+										else
+										{
+											$amount = $totalCount.'&nbsp;'.$sMeasure;
+											for($i=1;$i<=3;$i++) {if (($totalCount/3) >$i){$indicators++;} }
+										}
+									?>
+									<div class="t"><?=GetMessage("AVAILABLE");?></div>
+									<div class="indicators">
+										<?for($i=1;$i<=3;$i++){?>
+											<span class="<?=(($indicators) >=$i) ? 'r' : ''?><?=($i==1) ? ' first' : ''?>"></span>
+										<?}?>
+									</div>
+									<span class="value"><?=$amount?></span>
+								<?} else { echo GetMessage("BY_ORDER");}?>
+							</div>
+						</div>
+					<?}?>
+					<div class="share-block detail<?if($arParams["USE_STORE"]!="Y"):?> first<?endif;?>">
+						<div class="t"><?=GetMessage("SHARE");?></div>
+						<script type="text/javascript" src="//yandex.st/share/share.js" charset="utf-8"></script>
+						<div class="yashare-auto-init" data-yashareL10n="ru" data-yashareType="none" data-yashareQuickServices="yaru,vkontakte,facebook,twitter,odnoklassniki,moimir"></div> 
+					</div>
+				</div>
+			
+			
+		</td></tr><tr><td class="info-main-block-bottom">	
+		
+		<div class="info-dsc clearfix">
+
+			<div class="in-cart-bar">
+				<div class="shell">		
+					<?if( $arResult["OFFERS"] ){?>
+						<div class="item_<?=$arResult["ID"]?>">
+							<div class="cost-cell">
+								<div class="now">
+									<span class="offers_error"><?=GetMessage("OFFERS_DOESNT_SUPPORTED");?></span>
+									<div class="clearboth"></div>
+								</div>
+							</div>
+						</div>
+					<?}elseif ( $arResult["PRICES"] && $totalCount){?>
+						<div class="item_<?=$arResult["ID"]?>">
+							<div class="cost-cell">
+								<?
+									$arCountPricesCanAccess = 0;
+									foreach( $arResult["PRICES"] as $key => $arPrice ) { if($arPrice["CAN_ACCESS"]){$arCountPricesCanAccess++;} }
+								?>
+								<div class="now">
+									<div class="price_wrapp eq-item <?if (!$totalCount):?>by_order<?endif;?>">
+										<?foreach( $arResult["PRICES"] as $key => $arPrice ){?>
+											<?if( $arPrice["CAN_ACCESS"] ){?>
+												<?$price = CPrice::GetByID($arPrice["ID"]); ?>
+												<div class="price">
+													<?if($arCountPricesCanAccess>1):?><div class="price_name"><?=$price["CATALOG_GROUP_NAME"];?></div><?endif;?>
+													<?if( $arPrice["VALUE"] > $arPrice["DISCOUNT_VALUE"] ){?>
+														<div class="price_value"><?=$arPrice["PRINT_DISCOUNT_VALUE"]?></div>
+														<div class="prompt-discont"><?=GetMessage("WITHOUT_DISCOUNT");?>
+															<span>&nbsp;<strike><span><?=$arPrice["PRINT_VALUE"]?></span></strike></span>
+														</div>
+													<?}else{?>
+														<div class="price_value"><?=$arPrice["PRINT_VALUE"]?></div>
+													<?}?>
+												</div>
+											<?}?>
+										<?}?>
+									</div>
+									
+									<?if ($totalCount){?>
+										<?if($arParams["USE_PRODUCT_QUANTITY"]){?>
+											<?if(  ($arResult["CATALOG_QUANTITY"]>0) && $arResult["CAN_BUY"] ){ ?>
+												<span class="counter-wrapp eq-item<?if($arCountPricesCanAccess>1):?> fix<?endif;?>">
+													<span class="x"></span><select name="counter" class="counter">
+														<?
+															$max_count = $arResult["CATALOG_QUANTITY"];
+															$max_count_settings = intval($arParams['MAX_COUNT']);
+															if($max_count_settings != 0) $max_count = min($max_count, $max_count_settings);
+															for($i=1;$i<=$max_count;$i++){
+														?>
+															<?if($max_count>=intval($arParams["DEFAULT_COUNT"])){?>
+																<option value="<?=$i?>" <?=(($i==intval($arParams["DEFAULT_COUNT"])))? 'selected' : ''?>><?=$i?></option>
+															<?}else{?>
+																<option value="<?=$i?>" <?=(($i==$max_count))? 'selected' : ''?>><?=$i?></option>
+															<?}?>
+														<?}?>
+													</select>
+													<span class="measure"><?=$productsMeasure;?></span>
+												</span>
+											<?}?>
+										<?}?>
+										<script>$(".now").equalize({children: ".eq-item", reset: true});</script>
+										<?if($arResult["CAN_BUY"]){?>
+											<div class="but-cell item_<?=$arResult["ID"]?><?if($arCountPricesCanAccess>1):?> fix<?endif;?>">
+												<!--noindex-->
+													<a href="<?=$arResult["ADD_URL"]?>" data-item="<?=$arResult["ID"]?>" data-quantity="<?=($arResult["CATALOG_QUANTITY"]>=intval($arParams["DEFAULT_COUNT"])) ? intval($arParams["DEFAULT_COUNT"]): $arResult["CATALOG_QUANTITY"]; ?>" class="button_basket gradient to-cart" alt="<?=$arResult["NAME"]?>" rel="nofollow">
+														<i></i><span><?=GetMessage("TO_BASKET");?></span>
+													</a>
+													<a href="<?=SITE_DIR?>basket/" class="button_basket gradient in-cart" rel="nofollow" style="display:none;">
+														<i></i><span><?=GetMessage("IN_BASKET")?></span>
+													</a>
+													<a class="button_one_click_buy gradient" rel="nofollow" onclick="oneClickBuy('<?=$arResult["ID"]?>', '<?=$arParams["IBLOCK_ID"]?>')">
+														<span><?=GetMessage("ONE_CLICK_BUY");?></span>
+													</a>
+												<!--/noindex-->
+											</div>
+										<?}?>
+										<div class="clearboth"></div>
+									<?}else{?>
+										<?if($arParams["ORDER_BUTTON_VIEW"]=="order"){?>
+											<div class="but-cell by_order">
+											<!--noindex-->
+												<div class="now">
+													<?=CTires::showOrderButton($arParams["ORDER_BUTTON_VIEW"], $arResult, "button_basket gradient", "Y");?>
+												</div>
+											<!--/noindex-->
+											</div>
+										<?}?>
+									<?}?>
+								</div>
+							</div>
+						</div>
+					<?}else{?>
+						<?if($arParams["ORDER_BUTTON_VIEW"]=="order"){?>
+							<div class="item_<?=$arResult["ID"]?>">	
+								<!--noindex-->
+								<div class="cost-cell">
+									<div class="but-cell by_order">
+										<div class="now">
+											<?=CTires::showOrderButton($arParams["ORDER_BUTTON_VIEW"], $arResult, "button_basket gradient", "Y");?>
+										</div>
+									</div>
+								</div>
+								<!--/noindex-->
+							</div>
+						<?}?>
+					<?}?>
+				</div>
+			</div>		
+		</div>
+		</td></tr></table>
+
+	</div>
+</article>
+
+
+<form action="<?=SITE_DIR?>ajax/show_offer_stores.php" id="show_offers_stores">
+	<?
+		$arStoresParams = array(
+			"PER_PAGE" => "10",
+			"USE_STORE_PHONE" => $arParams["USE_STORE_PHONE"],
+			"SCHEDULE" => $arParams["SCHEDULE"],
+			"USE_MIN_AMOUNT" => $arParams["USE_MIN_AMOUNT"],
+			"MIN_AMOUNT" => $arParams["MIN_AMOUNT"],
+			"ELEMENT_ID" => $arSKU["ID"],
+			"STORE_PATH"  =>  $arParams["STORE_PATH"],
+			"MAIN_TITLE"  =>  $arParams["MAIN_TITLE"],
+			"MAX_AMOUNT"=>$arParams["MAX_AMOUNT"],
+			"USE_ONLY_MAX_AMOUNT" => $arParams["USE_ONLY_MAX_AMOUNT"],
+		);
+		foreach($arStoresParams as $name => $value) { echo "<input type='hidden' name='".$name."' value='".$value."'/>"; }
+	?>
+</form>
+<div class="offers_stores"></div>
+<div class="one_click_buy_frame"></div>
+<? if ($arParams["LINK_PROPERTY_SID"]&&$arResult["PROPERTIES"][$arParams["LINK_PROPERTY_SID"]]["VALUE"]):?>
+	<div id="similar_products">
+		<h2 class="similar_products"><?=GetMessage("SIMILAR_PRODUCTS");?></h2>
+		<?$GLOBALS['arrFilterAssociated'] = array( "ID" => $arResult["PROPERTIES"][$arParams["LINK_PROPERTY_SID"]]["VALUE"] );
+		$APPLICATION->IncludeComponent(
+			"bitrix:catalog.section",
+			"associated_slider",
+			Array(
+				"IBLOCK_TYPE" => $arParams["IBLOCK_TYPE"],
+				"IBLOCK_ID" => $arParams["IBLOCK_ID"],
+				"ORDER_BUTTON_VIEW" => $arParams["ORDER_BUTTON_VIEW"],
+				"SECTION_ID" => 0,
+				"SECTION_CODE" => "",
+				"ELEMENT_SORT_FIELD" => "sort",
+				"ELEMENT_SORT_ORDER" => "asc",
+				"FILTER_NAME" => "arrFilterAssociated",
+				"INCLUDE_SUBSECTIONS" => "Y",
+				"SHOW_ALL_WO_SECTION" => "Y",
+				"PAGE_ELEMENT_COUNT" => "99999",
+				"LINE_ELEMENT_COUNT" => 4,
+				"PROPERTY_CODE" => $arParams["LIST_PROPERTY_CODE"],
+				"OFFERS_FIELD_CODE" => $arParams["LIST_OFFERS_FIELD_CODE"],
+				"OFFERS_PROPERTY_CODE" => $arParams["LIST_OFFERS_PROPERTY_CODE"],
+				"OFFERS_SORT_FIELD" => $arParams["OFFERS_SORT_FIELD"],
+				"OFFERS_SORT_ORDER" => $arParams["OFFERS_SORT_ORDER"],
+				"SECTION_URL" => $arResult["FOLDER"].$arResult["URL_TEMPLATES"]["section"],
+				"DETAIL_URL" => $arResult["FOLDER"].$arResult["URL_TEMPLATES"]["element"],
+				"BASKET_URL" => $arParams["BASKET_URL"],
+				"ACTION_VARIABLE" => $arParams["ACTION_VARIABLE"],
+				"PRODUCT_ID_VARIABLE" => $arParams["PRODUCT_ID_VARIABLE"],
+				"PRODUCT_QUANTITY_VARIABLE" => "quantity",
+				"PRODUCT_PROPS_VARIABLE" => "prop",
+				"SECTION_ID_VARIABLE" => $arParams["SECTION_ID_VARIABLE"],
+				"AJAX_MODE" => $arParams["AJAX_MODE"],
+				"AJAX_OPTION_JUMP" => $arParams["AJAX_OPTION_JUMP"],
+				"AJAX_OPTION_STYLE" => $arParams["AJAX_OPTION_STYLE"],
+				"AJAX_OPTION_HISTORY" => $arParams["AJAX_OPTION_HISTORY"],
+				"CACHE_TYPE" =>$arParams["CACHE_TYPE"],
+				"CACHE_TIME" => $arParams["CACHE_TIME"],
+				"CACHE_GROUPS" => $arParams["CACHE_GROUPS"],
+				"META_KEYWORDS" => $arParams["LIST_META_KEYWORDS"],
+				"META_DESCRIPTION" => $arParams["LIST_META_DESCRIPTION"],
+				"BROWSER_TITLE" => $arParams["LIST_BROWSER_TITLE"],
+				"ADD_SECTIONS_CHAIN" => "N",
+				"DISPLAY_COMPARE" => $arParams["USE_COMPARE"],
+				"SET_TITLE" => $arParams["SET_TITLE"],
+				"SET_STATUS_404" => $arParams["SET_STATUS_404"],
+				"CACHE_FILTER" => $arParams["CACHE_FILTER"],
+				"PRICE_CODE" => $arParams["PRICE_CODE"],
+				"USE_PRICE_COUNT" => $arParams["USE_PRICE_COUNT"],
+				"SHOW_PRICE_COUNT" => $arParams["SHOW_PRICE_COUNT"],
+				"PRICE_VAT_INCLUDE" => $arParams["PRICE_VAT_INCLUDE"],
+				"PRODUCT_QUANTITY" => $arParams["USE_PRODUCT_QUANTITY"],
+				"OFFERS_CART_PROPERTIES" => array(),
+				"DISPLAY_TOP_PAGER" => $arParams["DISPLAY_TOP_PAGER"],
+				"DISPLAY_BOTTOM_PAGER" => $arParams["DISPLAY_BOTTOM_PAGER"],
+				"PAGER_TITLE" => $arParams["PAGER_TITLE"],
+				"PAGER_SHOW_ALWAYS" => "N",
+				"PAGER_TEMPLATE" => $arParams["PAGER_TEMPLATE"],
+				"PAGER_DESC_NUMBERING" => $arParams["PAGER_DESC_NUMBERING"],
+				"PAGER_DESC_NUMBERING_CACHE_TIME" => $arParams["PAGER_DESC_NUMBERING_CACHE_TIME"],
+				"PAGER_SHOW_ALL" => $arParams["PAGER_SHOW_ALL"],
+				"AJAX_OPTION_ADDITIONAL" => "",
+				"ADD_CHAIN_ITEM" => "N",
+				"SEZONNOST" => $arParams["MATCHING_ELEMENT_PROPERTIES"]["SEZONNOST"],
+				"SHIPY" => $arParams["MATCHING_ELEMENT_PROPERTIES"]["SHIPY"],
+				"CONVERT_CURRENCY" => $arParams["CONVERT_CURRENCY"],
+				"CURRENCY_ID" => $arParams["CURRENCY_ID"],
+			),
+		$component
+		);?>
+	</div>
+<?endif;?>
+
+<?if ($arResult["DETAIL_TEXT"]||$arResult["SECTION_FULL"]["DESCRIPTION"]||($arParams["USE_REVIEW"]=="Y")||$arResult["DISPLAY_PROPERTIES"]["VIDEO"]["VALUE"]||$arResult["DISPLAY_PROPERTIES"]["VIDEO_YOUTUBE"]["VALUE"]||$arResult["SECTION_FULL"]["UF_VIDEO"]||$arResult["SECTION_FULL"]["UF_VIDEO_YOUTUBE"]||$arResult["DISPLAY_PROPERTIES"]["FILES"]["VALUE"]||$arResult["SECTION_FULL"]["UF_FILES"]):?>
+	<div class="tabs-section">
+		<div class="switcher-wrapp">
+			<ul class="tabs">
+				<?if ($arResult["DETAIL_TEXT"]||$arResult["SECTION_FULL"]["DESCRIPTION"]):?>
+					<li>
+						<a><?=GetMessage("DESCRIPTION");?></a>
+						<div class="triangle"></div>
+					</li>
+				<?endif;?>
+						
+				<?if ($arResult["DISPLAY_PROPERTIES"]["VIDEO"]["VALUE"]||$arResult["DISPLAY_PROPERTIES"]["VIDEO_YOUTUBE"]["VALUE"]||$arResult["SECTION_FULL"]["UF_VIDEO"]||$arResult["SECTION_FULL"]["UF_VIDEO_YOUTUBE"]):?>
+					<li>
+						<a><?=GetMessage("VIDEO")?></a>
+						<div class="triangle"></div>
+					</li>
+				<?endif;?>
+				<?
+					$arFiles = array();
+					if ($arResult["DISPLAY_PROPERTIES"]["FILES"]["VALUE"]) { $arFiles = $arResult["DISPLAY_PROPERTIES"]["FILES"]["VALUE"]; }
+					else { $arFiles = $arResult["SECTION_FULL"]["UF_FILES"]; }
+					foreach ($arFiles as $key => $value){if (!intval($value)){unset($arFiles[$key]);}}
+				?>
+				<?if (($arResult["DISPLAY_PROPERTIES"]["FILES"]["VALUE"]||$arResult["SECTION_FULL"]["UF_FILES"]) && count($arFiles)):?>
+					<li>
+						<a><?=GetMessage("FILES")?></a>
+						<div class="triangle"></div>
+					</li>
+				<?endif;?>
+				<?if(($arParams["USE_STORE"] == "Y")&&($arResult["STORES_COUNT"])):?>
+					<li>
+						<a><?=$arParams["MAIN_TITLE"];?></a>
+						<div class="triangle"></div>
+					</li>
+				<?endif;?>
+				<?if ($arParams["USE_REVIEW"]=="Y"):?>
+					<li>
+						<a><?=GetMessage("PRODUCT_REVIEWS");?></a>
+						<div class="triangle"></div>
+					</li>
+				<?endif;?>
+			</ul>
+		</div>
+				
+		<div class="tabs-content">
+			<ul>
+				<?if ($arResult["DETAIL_TEXT"]||$arResult["SECTION_FULL"]["DESCRIPTION"]):?>
+					<li>
+						<?if ($arResult["DETAIL_TEXT"]):?>
+							<?=$arResult["DETAIL_TEXT"]?>
+						<?else:?>
+							<!--noindex--><?=$arResult["SECTION_FULL"]["DESCRIPTION"]?><!--/noindex-->
+						<?endif;?>
+					</li>
+				<?endif;?>
+				<?if ($arResult["DISPLAY_PROPERTIES"]["VIDEO"]["VALUE"]||$arResult["DISPLAY_PROPERTIES"]["VIDEO_YOUTUBE"]["VALUE"]||$arResult["SECTION_FULL"]["UF_VIDEO"]||$arResult["SECTION_FULL"]["UF_VIDEO_YOUTUBE"]):?>
+					<li class="video">
+						<?if (!empty($arResult["DISPLAY_PROPERTIES"]["VIDEO_YOUTUBE"]["VALUE"])):?>
+							<?=$arResult["DISPLAY_PROPERTIES"]["VIDEO_YOUTUBE"]["~VALUE"];?>
+						<?elseif (!empty($arResult["DISPLAY_PROPERTIES"]["VIDEO"]["VALUE"])):?>				
+							<?$APPLICATION->IncludeComponent(
+								"bitrix:player", "",
+								Array(
+								"PLAYER_TYPE" => "auto",
+								"USE_PLAYLIST" => "N",
+								"PATH" => CFile::GetPath($arResult['DISPLAY_PROPERTIES']["VIDEO"]["VALUE"]),
+								"WIDTH" => "525",
+								"HEIGHT" => "320",
+								"PREVIEW" => "",
+								"FILE_TITLE" => "",
+								"FILE_DURATION" => "",
+								"FILE_AUTHOR" => "",
+								"FILE_DATE" => "",
+								"FILE_DESCRIPTION" => "",
+								"SKIN_PATH" => "/bitrix/components/bitrix/player/mediaplayer/skins",
+								"SKIN" => "glow.zip",
+								"CONTROLBAR" => "none",
+								"WMODE" => "transparent",				
+								"SHOW_CONTROLS" => "N",
+								"SHOW_DIGITS" => "Y",
+								"CONTROLS_BGCOLOR" => "FFFFFF",
+								"CONTROLS_COLOR" => "000000",
+								"CONTROLS_OVER_COLOR" => "000000",
+								"SCREEN_COLOR" => "000000",
+								"AUTOSTART" => "N",
+								"REPEAT" => "none",
+								"VOLUME" => "90",
+								"ADVANCED_MODE_SETTINGS" => "Y",
+								"PLAYER_ID" => "",
+								"BUFFER_LENGTH" => "10",
+								"DOWNLOAD_LINK" => "",
+								"DOWNLOAD_LINK_TARGET" => "_self",
+								"ADDITIONAL_WMVVARS" => "")
+							);?>
+						<?elseif (!empty($arResult["SECTION_FULL"]['UF_VIDEO_YOUTUBE'])):?>
+							<?=$arResult["SECTION_FULL"]['~UF_VIDEO_YOUTUBE'];?>
+						<?elseif (!empty($arResult["SECTION_FULL"]['UF_VIDEO'])):?>				
+							<?$APPLICATION->IncludeComponent(
+								"bitrix:player", "",
+								Array(
+								"PLAYER_TYPE" => "auto",
+								"USE_PLAYLIST" => "N",
+								"PATH" => CFile::GetPath($arResult["SECTION_FULL"]['UF_VIDEO']),
+								"WIDTH" => "525",
+								"HEIGHT" => "320",
+								"PREVIEW" => "",
+								"FILE_TITLE" => "",
+								"FILE_DURATION" => "",
+								"FILE_AUTHOR" => "",
+								"FILE_DATE" => "",
+								"FILE_DESCRIPTION" => "",
+								"SKIN_PATH" => "/bitrix/components/bitrix/player/mediaplayer/skins",
+								"SKIN" => "glow.zip",
+								"CONTROLBAR" => "none",
+								"WMODE" => "transparent",				
+								"SHOW_CONTROLS" => "N",
+								"SHOW_DIGITS" => "Y",
+								"CONTROLS_BGCOLOR" => "FFFFFF",
+								"CONTROLS_COLOR" => "000000",
+								"CONTROLS_OVER_COLOR" => "000000",
+								"SCREEN_COLOR" => "000000",
+								"AUTOSTART" => "N",
+								"REPEAT" => "none",
+								"VOLUME" => "90",
+								"ADVANCED_MODE_SETTINGS" => "Y",
+								"PLAYER_ID" => "",
+								"BUFFER_LENGTH" => "10",
+								"DOWNLOAD_LINK" => "",
+								"DOWNLOAD_LINK_TARGET" => "_self",
+								"ADDITIONAL_WMVVARS" => "")
+							);?>
+						<?endif;?>
+					</li>
+				<?endif;?>
+				
+				
+				<?if (($arResult["DISPLAY_PROPERTIES"]["FILES"]["VALUE"]||$arResult["SECTION_FULL"]["UF_FILES"]) && count($arFiles)):?>
+					<li class="files">
+						
+						<?foreach( $arFiles as $arItem ){?>
+							<?$arItem = CFile::GetFileArray($arItem);?>
+							<div class="<? if( $arItem["CONTENT_TYPE"] == 'application/pdf' ){ echo "pdf"; } elseif( $arItem["CONTENT_TYPE"] == 'application/octet-stream' ){ echo "word"; } elseif( $arItem["CONTENT_TYPE"] == 'application/xls' ){ echo "excel"; }?>">
+								<?$FileName = substr($arItem["ORIGINAL_NAME"], 0, strrpos($arItem["ORIGINAL_NAME"], '.'));?>
+								<a href="<?=$arItem["SRC"]?>"><?=$FileName?></a>&nbsp;
+								<?=GetMessage('CT_NAME_SIZE')?>:
+								<?
+									$filesize = $arItem["FILE_SIZE"];
+									if($filesize > 1024) {
+										$filesize = ($filesize/1024);
+										if($filesize > 1024) {
+											$filesize = ($filesize/1024);
+											if($filesize > 1024) {
+												$filesize = ($filesize/1024);
+												$filesize = round($filesize, 1);
+												echo $filesize.GetMessage('CT_NAME_GB');
+											} else {
+												$filesize = round($filesize, 1);
+												echo $filesize.GetMessage('CT_NAME_MB');
+											}
+										} else {
+											$filesize = round($filesize, 1); echo $filesize.GetMessage('CT_NAME_KB');
+										}
+									} else {
+										$filesize = round($filesize, 1);
+										echo $filesize.GetMessage('CT_NAME_b');
+									}
+								?>
+							</div>
+						<?}?>
+					</li>
+				<?endif;?>
+				<?if(($arParams["USE_STORE"] == "Y")&&($arResult["STORES_COUNT"])):?>
+					<li>
+						<?$APPLICATION->IncludeComponent("bitrix:catalog.store.amount", "product_stores_amount", array(
+								"PER_PAGE" => "10",
+								"USE_STORE_PHONE" => $arParams["USE_STORE_PHONE"],
+								"SCHEDULE" => $arParams["SCHEDULE"],
+								"USE_MIN_AMOUNT" => $arParams["USE_MIN_AMOUNT"],
+								"MIN_AMOUNT" => $arParams["MIN_AMOUNT"],
+								"ELEMENT_ID" => $arResult["ID"],
+								"STORE_PATH"  =>  $arParams["STORE_PATH"],
+								"MAIN_TITLE"  =>  $arParams["MAIN_TITLE"],
+								"MAX_AMOUNT" => $arParams["MAX_AMOUNT"],
+								"USE_ONLY_MAX_AMOUNT" => $arParams["USE_ONLY_MAX_AMOUNT"],
+							),
+							$component
+						);?>
+					</li>
+				<?endif;?>
+<?endif;?>
+
+

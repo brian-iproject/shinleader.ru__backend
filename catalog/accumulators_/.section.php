@@ -1,0 +1,5 @@
+<?
+$sSectionName = "Аккумуляторы";
+$arDirProperties = Array(
+);
+?>

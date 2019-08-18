@@ -1,0 +1,66 @@
+<?
+require($_SERVER["DOCUMENT_ROOT"]."/bitrix/header.php");
+$APPLICATION->SetTitle("");
+?> 	
+<?
+Cmodule::IncludeModule('iblock');
+Cmodule::IncludeModule('catalog');
+$sect = new CIBlockSection;
+$el = new CIBlockElement;
+global $USER;
+global $APPLICATION;
+$arResult = array();
+$arParamsTranslate = array("replace_space"=>"-","replace_other"=>"-");
+
+require_once($_SERVER['DOCUMENT_ROOT'] . '/bitrix/modules/main/classes/general/xml.php');
+$strQueryText = QueryGetData(
+	"www.shinservice.ru",
+	80,
+	"/xml/shinservice-b2b.xml?id=88929572",
+	false,
+	$error_number,
+	$error_text
+);
+
+$file = $_SERVER["DOCUMENT_ROOT"]."/upload/shinservice-b2b.xml";
+if (!$strQueryText && file_exists($file)) {
+	$strQueryText = file_get_contents($file);
+}
+if (!$strQueryText) {
+	$arResult["ERROR"] = "Сервис временно недоступен";
+}
+
+
+if (empty($arResult["ERROR"])) {
+	file_put_contents($file, $strQueryText);
+	$xml = new SimpleXMLElement($file, false, true);
+
+	// проход по типам товара
+	foreach ($xml as $prodType => $prodCat) {
+		// для того, чтобы сослаться на тип товара (tyre, wheel) отсекаем последнюю 's' у группы товаров
+		$prodType = substr($prodType, 0, -1);
+		
+		// проход по товарам
+		foreach ($prodCat->$prodType as $prod) {
+			// проходим по атрибутам, вписываем во временную переменную с переводом ключа в верхний регистр для удобства
+			foreach ($prod->attributes() as $attr => $value) {
+				$arTmpAttr[strtoupper((string)$attr)] = (string)$value;
+			}
+
+			$arResult[strtoupper($prodType)."S"][] = $arTmpAttr["ID"];
+			
+			// удаляем временную переменную
+		}
+	}
+	
+	foreach (array_count_values($arResult["TIRES"]) as $arArticleDouble) {
+		if ($arArticleDouble >=2 ) {
+			$arArticlesDouble[] = $arArticleDouble;
+		}
+	}			
+	echo "<pre>";
+	print_r(array_count_values($arResult["TIRES"]));
+	echo "</pre>";			
+}
+?>
+<?require($_SERVER["DOCUMENT_ROOT"]."/bitrix/footer.php");?>

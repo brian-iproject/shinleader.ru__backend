@@ -1,0 +1,53 @@
+<?
+$aMenuLinks = Array(
+	Array(
+		"О магазине", 
+		"/about/", 
+		Array(), 
+		Array(), 
+		"" 
+	),
+	/*Array(
+		"Новости", 
+		"/news/", 
+		Array(), 
+		Array(), 
+		"" 
+	),*/
+	Array(
+		"Статьи", 
+		"/articles/", 
+		Array(), 
+		Array(), 
+		"" 
+	),
+	/*Array(
+		"Шиномонтаж", 
+		"/tire-fitting/", 
+		Array(), 
+		Array(), 
+		"" 
+	),*/
+	Array(
+		"Как купить", 
+		"/buy/", 
+		Array(), 
+		Array(), 
+		"" 
+	),
+	Array(
+		"Доставка", 
+		"/delivery/", 
+		Array(), 
+		Array(), 
+		"" 
+	)/*,
+	Array(
+		"Вопросы и ответы", 
+		"/faq/", 
+		Array(), 
+		Array(), 
+		"" 
+	)*/
+);
+?>

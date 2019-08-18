@@ -1,0 +1,6 @@
+<?
+$sSectionName = "Диски";
+$arDirProperties = Array(
+
+);
+?>

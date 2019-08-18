@@ -1,0 +1,29 @@
+.orderstatus_table
+{
+width:100%;
+border-collapse:collapse;
+}
+
+.orderstatus_table th, .orderstatus_table td
+{
+vertical-align:middle!important;
+border-bottom:1px solid #eadfc6;
+border-top:1px solid #eadfc6;
+height:44px;
+font-size:14px;
+}
+
+.orderstatus_table th
+{
+font-size:15px;
+line-height:14px;
+font-weight:bold;
+color:#685959;
+text-align:left;
+background:#f8edd2;
+}
+
+.orderstatus_table tr:hover td
+{
+background:#ebe5d8;
+}

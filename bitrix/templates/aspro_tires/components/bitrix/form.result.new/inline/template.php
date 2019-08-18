@@ -1,0 +1,107 @@
+<?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true) die();?>
+<script>
+	$(document).ready(function()
+	{
+		var emailInpuit = $("form[name=<?=$arResult["arForm"]["VARNAME"];?>] input[type=email]").attr("name");
+		if (emailInpuit) {$("form[name=<?=$arResult["arForm"]["VARNAME"];?>]").validate({onfocusout: false,messages:{licenses_popup: {required : BX.message('JS_REQUIRED_LICENSES')}},rules:{ emailInpuit: {email: true} }	});}
+		else { $("form[name=<?=$arResult["arForm"]["VARNAME"];?>]").validate({onfocusout: false,messages:{licenses_popup: {required : BX.message('JS_REQUIRED_LICENSES')}}}); }
+		$('input.phone').mask('<?=trim(COption::GetOptionString("aspro.tires", "PHONE_MASK", "+9 (999) 999-99-99", SITE_ID));?>');
+		<?if( !empty( $arResult["FORM_NOTE"] ) ):?>$("#content a.faq_icon").toggleClass("opened"); $("#faq_web_fom").slideDown(333);<?endif;?>
+	})
+</script>
+<?if( !empty( $arResult["FORM_NOTE"] ) ):?><br /><p style="color: green;" class="m16"><?=GetMessage("FORM_SENDED");?></p><?endif;?>
+<div class="module-ans-qw">
+	<div class="drop-question">
+		<div class="form-block">
+			<?=$arResult["FORM_HEADER"]?>
+				<div class="left-data">
+					<?foreach ($arResult["QUESTIONS"] as $FIELD_SID => $arQuestion){?>
+						<?if( $arQuestion["STRUCTURE"][0]["FIELD_PARAM"] == 'left' ){?>
+							<div class="r">
+								<label class="s"><?=$arQuestion["CAPTION"]?>:<?if ($arQuestion["REQUIRED"] == "Y"):?><span class="star">*</span><?endif;?></label>
+								<?
+									if( is_array($arResult["FORM_ERRORS"]) && array_key_exists($FIELD_SID, $arResult['FORM_ERRORS']) )
+									{
+										$html = str_replace('class="', 'class="error ', $arQuestion["HTML_CODE"]);
+										$arQuestion["HTML_CODE"] = $html;
+									}
+									if( $arQuestion["REQUIRED"] == "Y" )
+									{
+										$html = str_replace('name=', 'required name=', $arQuestion["HTML_CODE"]);
+										$arQuestion["HTML_CODE"] = $html;
+									}
+									if( $arQuestion["STRUCTURE"][0]["FIELD_TYPE"] == "email" )
+									{
+										$html = str_replace('type="text"', 'type="email" placeholder="mail@domen.ru"', $arQuestion["HTML_CODE"]);
+										$arQuestion["HTML_CODE"] = $html;
+									}
+								?>
+								<?=$arQuestion["HTML_CODE"]?>
+							</div>
+						<?}?>
+					<?}?>
+					<?if($arResult["isUseCaptcha"] == "Y"){?>
+						<div class="r captcha">
+							<input type="hidden" name="captcha_sid" value="<?=htmlspecialcharsbx($arResult["CAPTCHACode"]);?>" />
+							<div class="captcha-label">
+								<label><?=GetMessage("FORM_CAPRCHE_TITLE")?>:<span class="star">*</span></label><br />
+								<input type="text" name="captcha_word" size="30" maxlength="50" value="" class="inputtext" required />
+							</div>
+							<img src="/bitrix/tools/captcha.php?captcha_sid=<?=htmlspecialcharsbx($arResult["CAPTCHACode"]);?>" width="180" height="40" />
+						</div>
+					<?}?>
+				</div>
+				<div class="right-data">
+					<?foreach ($arResult["QUESTIONS"] as $FIELD_SID => $arQuestion){
+						if ($arQuestion['STRUCTURE'][0]['FIELD_TYPE'] == 'hidden'){echo $arQuestion["HTML_CODE"];}
+						elseif( $arQuestion["STRUCTURE"][0]["FIELD_PARAM"] != 'left'){?>
+							<div class="r">
+								<label class="s"><?=$arQuestion["CAPTION"]?>:<?if ($arQuestion["REQUIRED"] == "Y"):?><span class="star">*</span><?endif;?></label>
+								<?
+									if( is_array($arResult["FORM_ERRORS"]) && array_key_exists($FIELD_SID, $arResult['FORM_ERRORS']) )
+									{
+										$html = str_replace('class="', 'class="error ', $arQuestion["HTML_CODE"]);
+										$arQuestion["HTML_CODE"] = $html;
+									}
+									if( $arQuestion["REQUIRED"] == "Y" )
+									{
+										$html = str_replace('name=', 'required name=', $arQuestion["HTML_CODE"]);
+										$arQuestion["HTML_CODE"] = $html;
+									}
+									if( $arQuestion["STRUCTURE"][0]["FIELD_TYPE"] == "email" )
+									{
+										$html = str_replace('type="text"', 'type="email" placeholder="mail@domen.com"', $arQuestion["HTML_CODE"]);
+										$arQuestion["HTML_CODE"] = $html;
+									}
+								?>
+								<?=$arQuestion["HTML_CODE"]?>
+							</div>
+						<?}
+					}?>
+				</div>
+				<?if(COption::GetOptionString("aspro.tires", "SHOW_LICENCE", "N") == "Y"):?>
+					<div class="clearboth"></div>
+					<div class="r">
+						<div class="licence_block filter label_block">
+							<label for="licenses_popup">
+								<?$APPLICATION->IncludeFile(SITE_DIR."include/licenses_text.php", Array(), Array("MODE" => "html", "NAME" => "LICENSES")); ?>
+							</label>
+							<input type="checkbox" id="licenses_popup" name="licenses_popup" required value="Y">
+						</div>
+					</div>
+				<?endif;?>
+				<div class="but-r">
+					<div class="clearboth"></div>
+					<div class="prompt">
+						<span class="dash">&mdash;</span> <?=GetMessage("FORM_REQUIRED_FIELDS");?>
+					</div>
+					<div class="but_wr">
+						<!--noindex-->
+							<button type="submit" name="web_form_submit" class="button1" value="submit"><?=$arResult["arForm"]["BUTTON"]?></button>
+						<!--/noindex-->
+					</div>
+				</div>
+			<?=$arResult["FORM_FOOTER"]?>
+		</div>
+	</div>
+</div>

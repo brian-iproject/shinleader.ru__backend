@@ -1,0 +1,529 @@
+<?if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();?>
+
+<?
+	CModule::IncludeModule("iblock");
+	$arSection = array();
+	if ($arResult["VARIABLES"]["SECTION_ID"]>0)
+	{
+		$arFilter = Array('IBLOCK_ID'=>$arParams["IBLOCK_ID"], 'GLOBAL_ACTIVE'=>'Y', "ID" => $arResult["VARIABLES"]["SECTION_ID"]);
+		$db_list = CIBlockSection::GetList(array(), $arFilter, true, array("ID", "NAME", "IBLOCK_ID", "DEPTH_LEVEL", "IBLOCK_SECTION_ID", "CODE"));
+		while($section = $db_list->GetNext()) { $arSection = $section; }
+	}
+	elseif(strlen(trim($arResult["VARIABLES"]["SECTION_CODE"]))>0)
+	{
+	  $arFilter = Array('IBLOCK_ID'=>$arParams["IBLOCK_ID"], 'GLOBAL_ACTIVE'=>'Y', "=CODE" => $arResult["VARIABLES"]["SECTION_CODE"]);
+	  $db_list = CIBlockSection::GetList(array(), $arFilter, true, array("ID", "NAME", "IBLOCK_ID", "DEPTH_LEVEL", "IBLOCK_SECTION_ID", "CODE"));
+	  while($section = $db_list->GetNext()) { $arSection = $section;}
+	}
+?>
+
+<?
+	$diameterProperty = 0;
+
+	if (CSite::InDir(SITE_DIR.'catalog/tires'))
+	{ $diameterProperty = $arParams["POSADOCHNYY_DIAMETR"]; }
+	elseif (CSite::InDir(SITE_DIR.'catalog/wheels'))
+	{ $diameterProperty = $arParams["POSADOCHNYY_DIAMETR_DISKA"]; }
+
+	$iChildDepthLevel  = $arSection["DEPTH_LEVEL"] + 1;
+	$arChildSections = CIBlockSection::GetList( Array("SORT"=>"ASC"), Array("IBLOCK_ID"=>$arParams["IBLOCK_ID"], "SECTION_ID" => $arSection["ID"],"DEPTH_LEVEL " => $iChildDepthLevel), false, Array("ID", "IBLOCK_ID", "IBLOCK_SECTION_ID", "NAME", "DEPTH_LEVEL"), false)->GetNext();
+	$bHaveChilds = false;
+	if (!empty($arChildSections)) { $bHaveChilds = true; }
+?>
+
+<?if( $arSection["DEPTH_LEVEL"] == 0){?>
+	<?$APPLICATION->IncludeComponent(
+		"bitrix:catalog.section.list",
+		"dl1",
+		Array(
+			"IBLOCK_TYPE" => $arParams["IBLOCK_TYPE"],
+			"IBLOCK_ID" => $arParams["IBLOCK_ID"],
+			"CACHE_TYPE" => $arParams["CACHE_TYPE"],
+			"CACHE_TIME" => $arParams["CACHE_TIME"],
+			"CACHE_GROUPS" => $arParams["CACHE_GROUPS"],
+			"COUNT_ELEMENTS" => $arParams["SECTION_COUNT_ELEMENTS"],
+			"TOP_DEPTH" => 1,
+			"SECTION_URL" => $arResult["FOLDER"].$arResult["URL_TEMPLATES"]["section"],
+			"SECTION_ID" => $arResult["VARIABLES"]["SECTION_ID"],
+			"SECTION_CODE" => $arResult["VARIABLES"]["SECTION_CODE"],
+			"SECTION_SORT_FIELD"    =>      "name",
+			"SECTION_SORT_ORDER"    =>      "desc",
+		),
+		$component
+	);?>
+	<?$APPLICATION->SetTitle($arSection["NAME"]);?>
+
+<?}elseif($bHaveChilds&&($arSection["DEPTH_LEVEL"] == 1)){?>
+
+	<div class="left_side">
+		<div class="manufacturers-title"><?=GetMessage("MANUFACTURERS");?></div>
+		<?$APPLICATION->IncludeComponent(
+			"bitrix:catalog.section.list",
+			"left_menu",
+			Array(
+				"IBLOCK_TYPE" => $arParams["IBLOCK_TYPE"],
+				"IBLOCK_ID" => $arParams["IBLOCK_ID"],
+				"CACHE_TYPE" => $arParams["CACHE_TYPE"],
+				"CACHE_TIME" => $arParams["CACHE_TIME"],
+				"CACHE_GROUPS" => $arParams["CACHE_GROUPS"],
+				"COUNT_ELEMENTS" => $arParams["SECTION_COUNT_ELEMENTS"],
+				"TOP_DEPTH" => 1,
+				"SECTION_URL" => $arResult["FOLDER"].$arResult["URL_TEMPLATES"]["section"],
+				"SECTION_ID" => $arSection["IBLOCK_SECTION_ID"],
+				"CURRENT" => $arResult["VARIABLES"]["SECTION_CODE"],
+				"ADD_SECTIONS_CHAIN" => "N",
+			),
+			$component
+		);?>
+	</div>
+
+	<div class="right_side">
+		<?
+		$arSelect = array("ID", "DETAIL_PICTURE", "PICTURE", "NAME", "DESCRIPTION");
+		if ($arParams["LIST_BROWSER_TITLE"]) { $arSelect = array_merge($arSelect, (array)$arParams["LIST_BROWSER_TITLE"]); }
+		if ($arParams["LIST_META_KEYWORDS"]) { $arSelect = array_merge($arSelect, (array)$arParams["LIST_META_KEYWORDS"]); }
+		if ($arParams["LIST_META_DESCRIPTION"]) { $arSelect = array_merge($arSelect, (array)$arParams["LIST_META_DESCRIPTION"]); }
+		$arSectionFull = CIBlockSection::GetList(array(), array("ID" => $arSection["ID"], "IBLOCK_ID"=> $arSection["IBLOCK_ID"]), false, $arSelect, false)->GetNext();
+		$ipropValues = new \Bitrix\Iblock\InheritedProperty\SectionValues($arSection["IBLOCK_ID"], $arSection["ID"]);
+		$arSectionSeoValues = $ipropValues->getValues();
+		?>
+
+		<?if ($arSectionFull["DESCRIPTION"]):?>
+			<div class="manufacturer-description">
+				<?if (!empty($arSectionFull["DETAIL_PICTURE"])||!empty($arSectionFull["PICTURE"])):?>
+					<div class="manufacturer-image">
+						<?if( !empty( $arSectionFull["DETAIL_PICTURE"] ) ){?>
+							<?$img = CFile::ResizeImageGet($arSectionFull["DETAIL_PICTURE"], array( "width" => 125, "height" => 37 ), BX_RESIZE_IMAGE_PROPORTIONAL,true );?>
+							<img src="<?=$img["src"]?>" alt="<?=$arSectionFull["NAME"]?>" title="<?=$arSectionFull["NAME"]?>" />
+						<?}elseif( !empty( $arSectionFull["PICTURE"] ) ){?>
+								<?$img = CFile::ResizeImageGet($arSectionFull["PICTURE"]["ID"], array( "width" => 120, "height" => 37 ), BX_RESIZE_IMAGE_PROPORTIONAL,true );?>
+								<img src="<?=$img["src"]?>" alt="<?=$arSectionFull["NAME"]?>" title="<?=$arSectionFull["NAME"]?>" />
+						<?}?>
+						<div class="name"><?=$arSectionFull["NAME"]?></div>
+					</div>
+				<?endif;?>
+				<?=$arSectionFull["DESCRIPTION"];?>
+			</div>
+		<?endif;?>
+
+		<?$APPLICATION->IncludeComponent(
+			"bitrix:catalog.section.list",
+			"catalog_list",
+			Array(
+				"IBLOCK_TYPE" => $arParams["IBLOCK_TYPE"],
+				"IBLOCK_ID" => $arParams["IBLOCK_ID"],
+				"SECTION_ID" => $arResult["VARIABLES"]["SECTION_ID"],
+				"SECTION_CODE" => $arResult["VARIABLES"]["SECTION_CODE"],
+				"CACHE_TYPE" => $arParams["CACHE_TYPE"],
+				"CACHE_TIME" => $arParams["CACHE_TIME"],
+				"CACHE_GROUPS" => $arParams["CACHE_GROUPS"],
+				"COUNT_ELEMENTS" => $arParams["SECTION_COUNT_ELEMENTS"],
+				"TOP_DEPTH" => $arParams["SECTION_TOP_DEPTH"],
+				"SECTION_PAGE_ELEMENT" => $arParams["SECTION_PAGE_ELEMENT"],
+				"SECTION_URL" => $arResult["FOLDER"].$arResult["URL_TEMPLATES"]["section"],
+				"PRICE_CODE" => $arParams["PRICE_CODE"],
+				"DISCOUNT_PRICE_CODE" => $arParams["DISCOUNT_PRICE_CODE"],
+				"PAGE" => $_REQUEST["PAGEN_2"],
+				"SECTION_USER_FIELDS" =>array(
+					0 => "UF_DESCRIPTION"
+				),
+			),
+			$component
+		);?>
+	</div>
+	<div style="clear:both"></div>
+	<?
+	if(CSite::InDir(SITE_DIR.'catalog/tires')||CSite::InDir(SITE_DIR.'catalog/wheels')||CSite::InDir(SITE_DIR.'catalog/accumulators')||CSite::InDir(SITE_DIR.'search/tires')||CSie::InDir(SITE_DIR.'search/wheels')||CSite::InDir(SITE_DIR.'search/accumulators')){
+		$res = CIBlock::GetByID($arSection["IBLOCK_ID"]);
+		if($ar_res = $res->GetNext()) $APPLICATION->SetTitle($ar_res['NAME']." ".$APPLICATION->GetTitle());
+	}
+
+	if($arParams["LIST_BROWSER_TITLE"]){
+		if($arSectionFull[$arParams["LIST_BROWSER_TITLE"]]){
+			$APPLICATION->SetPageProperty("title", $arSectionFull[$arParams["LIST_BROWSER_TITLE"]]);
+		}
+		else{
+			$APPLICATION->SetPageProperty("title", $arSectionSeoValues['SECTION_META_TITLE']);
+		}
+	}
+	if($arParams["LIST_META_KEYWORDS"]){
+		if($arSectionFull[$arParams["LIST_META_KEYWORDS"]]){
+			$APPLICATION->SetPageProperty("keywords", $arSectionFull[$arParams["LIST_META_KEYWORDS"]]);
+		}
+		else{
+			$APPLICATION->SetPageProperty("keywords", $arSectionSeoValues['SECTION_META_KEYWORDS']);
+		}
+	}
+	if($arParams["LIST_META_DESCRIPTION"]){
+		if($arSectionFull[$arParams["LIST_META_DESCRIPTION"]]){
+			$APPLICATION->SetPageProperty("description", $arSectionFull[$arParams["LIST_META_DESCRIPTION"]]);
+		}
+		else{
+			$APPLICATION->SetPageProperty("description", $arSectionSeoValues['SECTION_META_DESCRIPTION']);
+		}
+	}
+	?>
+
+
+<?}elseif(!$bHaveChilds && ($arSection["DEPTH_LEVEL"] == 1)){?>
+
+	<div class="left_side">
+		<div class="manufacturers-title"><?=GetMessage("MANUFACTURERS");?></div>
+		<?$APPLICATION->IncludeComponent(
+			"bitrix:catalog.section.list",
+			"left_menu",
+			Array(
+				"IBLOCK_TYPE" => $arParams["IBLOCK_TYPE"],
+				"IBLOCK_ID" => $arParams["IBLOCK_ID"],
+				"CACHE_TYPE" => $arParams["CACHE_TYPE"],
+				"CACHE_TIME" => $arParams["CACHE_TIME"],
+				"CACHE_GROUPS" => $arParams["CACHE_GROUPS"],
+				"COUNT_ELEMENTS" => $arParams["SECTION_COUNT_ELEMENTS"],
+				"TOP_DEPTH" => 1,
+				"SECTION_URL" => $arResult["FOLDER"].$arResult["URL_TEMPLATES"]["section"],
+				"SECTION_ID" => $arSection["IBLOCK_SECTION_ID"],
+				"CURRENT" => $arSection["CODE"],
+				"ADD_SECTIONS_CHAIN" => "N",
+			),
+			$component
+		);?>
+	</div>
+	<div class="right_side">
+
+		<?
+			global $sCatalogDisplay;
+			$sCatalogDisplay = strtolower($arParams["LIST_DEFAULT_CATALOG_TEMPLATE"]);
+			if($_REQUEST['display']) {$sCatalogDisplay = $_REQUEST['display'];}
+			elseif($_SESSION['display']) {$sCatalogDisplay = $_SESSION['display'];}
+			$_SESSION['display'] = $sCatalogDisplay;
+
+			global $sCatalogSort;
+			global $sCatalogSortOrder;
+			$sCatalogSort = strtolower($arParams["ELEMENT_SORT_FIELD"]);
+			$sCatalogSortOrder = strtolower($arParams["ELEMENT_SORT_ORDER"]);
+			if($_REQUEST['sort']) {$sCatalogSort = $_REQUEST['sort'];}
+			elseif($_SESSION['sort']) {$sCatalogSort = $_SESSION['sort'];}
+			$_SESSION['sort'] = $sCatalogSort;
+			if($_REQUEST['order']) {$sCatalogSortOrder = $_REQUEST['order'];}
+			elseif($_SESSION['order']) {$sCatalogSortOrder = $_SESSION['order'];}
+			$_SESSION['order'] = $sCatalogSortOrder;
+		?>
+
+		<div class="catalog_display_wrapp">
+			<span class="catalog_display">
+
+				<span class="catalog_sort">
+					<span class="sort_title"><?=GetMessage("CATALOG_SORT");?></span>
+					<select>
+						<?
+							$basePrice = CCatalogGroup::GetBaseGroup();
+							$arSorts = array(
+								"POPULARITY" => array("NAME"=>"SHOW_COUNTER", "ORDER"=>array("asc", "desc")),
+								"PRICE" => array("NAME"=>"CATALOG_PRICE_".$basePrice["ID"], "ORDER"=>array("asc", "desc")),
+								"MANUFACTURER" => array("NAME"=>"PROPERTY_".$arParams["PROIZVODITEL"], "ORDER"=>array("asc", "desc")),
+								"NAME" => array("NAME"=>"NAME", "ORDER"=>array("asc", "desc")),
+							);
+							foreach($arSorts as $key=>$arSort)
+							{
+								foreach($arSort["ORDER"] as $sortOrder)
+								{
+									$selected="";
+									if ((strtoupper($sCatalogSort)==$arSort["NAME"])&&(strtoupper($sCatalogSortOrder)==strtoupper($sortOrder))){$selected="selected ";}
+									echo '<option '.$selected.'value="'.$APPLICATION->GetCurPageParam('sort='.strtolower($arSort["NAME"]).'&order='.$sortOrder, array("sort", "order")).'">'
+										.GetMessage("SORT_".$key."_".strtoupper($sortOrder)).'</option>';
+								}
+							}
+						?>
+					</select>
+				</span>
+
+				<a rel="nofollow" <?if ($sCatalogDisplay!="block"):?>href="<?=$APPLICATION->GetCurPageParam('display=block', array('display', 'mode'))?>"<?endif;?> class="block<?if ($sCatalogDisplay=="block"):?> current<?endif;?>">
+					<span><?=GetMessage("DISPLAY_BLOCK")?></span>
+				</a>
+				<a rel="nofollow" <?if ($sCatalogDisplay!="list"):?>href="<?=$APPLICATION->GetCurPageParam('display=list', 	array('display', 'mode'))?>"<?endif;?> class="list<?if ($sCatalogDisplay=="list"):?> current<?endif;?>">
+					<span><?=GetMessage("DISPLAY_LIST")?></span>
+				</a>
+			</span>
+		</div>
+		<script>
+			$(".catalog_display a").onselectstart = function() { return false; };
+			$(".catalog_display a").click(function()
+			{
+				if (!$(this).is(".current"))
+				{
+					$(this).parents(".catalog_display").find("a").removeClass("current");
+					$(this).addClass("current");
+				}
+			});
+			$(".catalog_sort select").change(function()
+			{
+				document.location.href = $(this).attr("value");
+			});
+		</script>
+
+
+
+		<?$APPLICATION->IncludeComponent(
+			"bitrix:catalog.section",
+			"catalog_".$sCatalogDisplay,
+			Array(
+				"DISCOUNT_PRICE_CODE" => $arParams["DISCOUNT_PRICE_CODE"],
+				"IBLOCK_TYPE" => $arParams["IBLOCK_TYPE"],
+				"IBLOCK_ID" => $arParams["IBLOCK_ID"],
+				"HIDE_NOT_AVAILABLE" => $arParams["HIDE_NOT_AVAILABLE"],
+				"ELEMENT_SORT_FIELD" => $sCatalogSort,
+				"ELEMENT_SORT_ORDER" => $sCatalogSortOrder,
+				"ELEMENT_SORT_FIELD2" => $arParams["ELEMENT_SORT_FIELD2"],
+				"ELEMENT_SORT_ORDER2" => $arParams["ELEMENT_SORT_ORDER2"],
+				"PROPERTY_CODE" => $arParams["LIST_PROPERTY_CODE"],
+				"MATCHING_ELEMENT_PROPERTIES" => array
+				(
+					"POSADOCHNYY_DIAMETR_DISKA" => $arParams["POSADOCHNYY_DIAMETR_DISKA"],
+					"SHIRINA_DISKA" => $arParams["SHIRINA_DISKA"],
+					"DIAMETR_STUPITSY" => $arParams["DIAMETR_STUPITSY"],
+					"MEZHBOLTOVOE_RASSTOYANIE" => $arParams["MEZHBOLTOVOE_RASSTOYANIE"],
+					"VYLET_DISKA" => $arParams["VYLET_DISKA"],
+					"SHIRINA_PROFILYA" => $arParams["SHIRINA_PROFILYA"],
+					"VYSOTA_PROFILYA" => $arParams["VYSOTA_PROFILYA"],
+					"POSADOCHNYY_DIAMETR" => $arParams["POSADOCHNYY_DIAMETR"],
+					"SEZONNOST" => $arParams["SEZONNOST"],
+					"SHIPY" => $arParams["SHIPY"],
+					"RUN_ON_FLAT" => $arParams["RUN_ON_FLAT"],
+				),
+				"LIST_DISPLAY_POPUP_IMAGE" => $arParams["LIST_DISPLAY_POPUP_IMAGE"],
+
+				"SET_LAST_MODIFIED" => $arParams["SET_LAST_MODIFIED"],
+				"MESSAGE_404" => $arParams["MESSAGE_404"],
+				"SET_STATUS_404" => $arParams["SET_STATUS_404"],
+				"SHOW_404" => $arParams["SHOW_404"],
+				"FILE_404" => $arParams["FILE_404"],
+				"USE_MAIN_ELEMENT_SECTION" => $arParams["USE_MAIN_ELEMENT_SECTION"],
+
+				"USE_STORE" => $arParams["USE_STORE"],
+				"USE_MIN_AMOUNT" => $arParams["USE_MIN_AMOUNT"],
+				"MIN_AMOUNT"=>$arParams["MIN_AMOUNT"],
+				"MAX_AMOUNT"=>$arParams["MAX_AMOUNT"],
+				"MAIN_TITLE"=>$arParams["MAIN_TITLE"],
+				"MAIN_TITLE_LIST"=>$arParams["MAIN_TITLE_LIST"],
+				"USE_ONLY_MAX_AMOUNT" => $arParams["USE_ONLY_MAX_AMOUNT"],
+				"DEFAULT_COUNT" => $arParams["DEFAULT_COUNT"],
+				"DIAMETER_PROPERTY" => $diameterProperty,
+				"META_KEYWORDS" => $arParams["LIST_META_KEYWORDS"],
+				"META_DESCRIPTION" => $arParams["LIST_META_DESCRIPTION"],
+				"BROWSER_TITLE" => $arParams["LIST_BROWSER_TITLE"],
+				"INCLUDE_SUBSECTIONS" => $arParams["INCLUDE_SUBSECTIONS"],
+				"BASKET_URL" => $arParams["BASKET_URL"],
+				"ACTION_VARIABLE" => $arParams["ACTION_VARIABLE"],
+				"PRODUCT_ID_VARIABLE" => $arParams["PRODUCT_ID_VARIABLE"],
+				"SECTION_ID_VARIABLE" => $arParams["SECTION_ID_VARIABLE"],
+				"PRODUCT_QUANTITY_VARIABLE" => $arParams["PRODUCT_QUANTITY_VARIABLE"],
+				"PRODUCT_PROPS_VARIABLE" => $arParams["PRODUCT_PROPS_VARIABLE"],
+				"FILTER_NAME" => $arParams["FILTER_NAME"],
+				"CACHE_TYPE" => $arParams["CACHE_TYPE"],
+				"CACHE_TIME" => $arParams["CACHE_TIME"],
+				"CACHE_FILTER" => $arParams["CACHE_FILTER"],
+				"CACHE_GROUPS" => $arParams["CACHE_GROUPS"],
+				"SET_TITLE" => "Y",
+				"SET_STATUS_404" => $arParams["SET_STATUS_404"],
+				"DISPLAY_COMPARE" => $arParams["USE_COMPARE"],
+				"PAGE_ELEMENT_COUNT" => $arParams["PAGE_ELEMENT_COUNT"],
+				"LINE_ELEMENT_COUNT" => $arParams["LINE_ELEMENT_COUNT"],
+				"PRICE_CODE" => $arParams["PRICE_CODE"],
+				"USE_PRICE_COUNT" => $arParams["USE_PRICE_COUNT"],
+				"SHOW_PRICE_COUNT" => $arParams["SHOW_PRICE_COUNT"],
+				"MAX_COUNT" => $arParams["MAX_COUNT"],
+				"USE_REVIEW" => $arParams["USE_REVIEW"],
+				"MESSAGES_PER_PAGE" => $arParams["MESSAGES_PER_PAGE"],
+				"USE_CAPTCHA" => $arParams["USE_CAPTCHA"],
+				"REVIEW_AJAX_POST" => $arParams["REVIEW_AJAX_POST"],
+				"PATH_TO_SMILE" => $arParams["PATH_TO_SMILE"],
+				"FORUM_ID" => $arParams["FORUM_ID"],
+				"URL_TEMPLATES_READ" => $arParams["URL_TEMPLATES_READ"],
+				"SHOW_LINK_TO_FORUM" => $arParams["SHOW_LINK_TO_FORUM"],
+				"POST_FIRST_MESSAGE" => $arParams["POST_FIRST_MESSAGE"],
+				"USE_RATING" => $arParams["USE_RATING"],
+				"PRICE_VAT_INCLUDE" => $arParams["PRICE_VAT_INCLUDE"],
+				"USE_PRODUCT_QUANTITY" => $arParams['USE_PRODUCT_QUANTITY'],
+				"PRODUCT_PROPERTIES" => $arParams["PRODUCT_PROPERTIES"],
+
+				"DISPLAY_TOP_PAGER" => $arParams["DISPLAY_TOP_PAGER"],
+				"DISPLAY_BOTTOM_PAGER" => $arParams["DISPLAY_BOTTOM_PAGER"],
+				"PAGER_TITLE" => $arParams["PAGER_TITLE"],
+				"PAGER_SHOW_ALWAYS" => $arParams["PAGER_SHOW_ALWAYS"],
+				"PAGER_TEMPLATE" => $arParams["PAGER_TEMPLATE"],
+				"PAGER_DESC_NUMBERING" => $arParams["PAGER_DESC_NUMBERING"],
+				"PAGER_DESC_NUMBERING_CACHE_TIME" => $arParams["PAGER_DESC_NUMBERING_CACHE_TIME"],
+				"PAGER_SHOW_ALL" => $arParams["PAGER_SHOW_ALL"],
+				"ADD_SECTIONS_CHAIN" => "Y",
+				"OFFERS_CART_PROPERTIES" => $arParams["OFFERS_CART_PROPERTIES"],
+				"OFFERS_FIELD_CODE" => $arParams["LIST_OFFERS_FIELD_CODE"],
+				"OFFERS_PROPERTY_CODE" => $arParams["LIST_OFFERS_PROPERTY_CODE"],
+				"OFFERS_SORT_FIELD" => $arParams["OFFERS_SORT_FIELD"],
+				"OFFERS_SORT_ORDER" => $arParams["OFFERS_SORT_ORDER"],
+				"OFFERS_LIMIT" => $arParams["LIST_OFFERS_LIMIT"],
+
+				"SECTION_ID" => $arResult["VARIABLES"]["SECTION_ID"],
+				"SECTION_CODE" => $arResult["VARIABLES"]["SECTION_CODE"],
+				"SECTION_URL" => $arResult["FOLDER"].$arResult["URL_TEMPLATES"]["section"],
+				"SECTION_USER_FIELDS" =>array(
+					0 => "UF_NEW",
+					1 => "UF_AKCIYA",
+					2 => "UF_HIT",
+					3 => "UF_MORE_FILES"
+				),
+				"DETAIL_URL" => $arResult["FOLDER"].$arResult["URL_TEMPLATES"]["element"],
+				'CONVERT_CURRENCY' => $arParams['CONVERT_CURRENCY'],
+				'CURRENCY_ID' => $arParams['CURRENCY_ID'],
+				'DISABLE_INIT_JS_IN_COMPONENT' => (isset($arParams['DISABLE_INIT_JS_IN_COMPONENT']) ? $arParams['DISABLE_INIT_JS_IN_COMPONENT'] : '')
+			), 	$component
+		);?>
+	</div>
+	<div style="clear:both"></div>
+	<?
+		if (CSite::InDir(SITE_DIR.'catalog/tires')||CSite::InDir(SITE_DIR.'catalog/wheels')||CSite::InDir(SITE_DIR.'catalog/accumulators')||CSite::InDir(SITE_DIR.'search/tires')||CSite::InDir(SITE_DIR.'search/wheels')||CSite::InDir(SITE_DIR.'search/accumulators'))
+		{
+			$res = CIBlock::GetByID($arSection["IBLOCK_ID"]);
+			if($ar_res = $res->GetNext()) $APPLICATION->SetTitle($ar_res['NAME']." ".$APPLICATION->GetTitle());
+		}
+	?>
+
+<?}elseif( $arSection["DEPTH_LEVEL"] == 2 ){?>
+	<div class="left_side">
+		<?$arSubSection = CIBlockSection::GetList(array(), array( "IBLOCK_ID" => $arParams["IBLOCK_ID"], "ID" => $arSection["IBLOCK_SECTION_ID"] ), false, array( "ID", "NAME", "IBLOCK_ID", "IBLOCK_SECTION_ID", "CODE" ))->GetNext();?>
+		<div class="manufacturers-title"><?=GetMessage("MANUFACTURERS");?></div>
+		<?$APPLICATION->IncludeComponent(
+			"bitrix:catalog.section.list",
+			"left_menu",
+			Array(
+				"IBLOCK_TYPE" => $arParams["IBLOCK_TYPE"],
+				"IBLOCK_ID" => $arParams["IBLOCK_ID"],
+				"CACHE_TYPE" => $arParams["CACHE_TYPE"],
+				"CACHE_TIME" => $arParams["CACHE_TIME"],
+				"CACHE_GROUPS" => $arParams["CACHE_GROUPS"],
+				"COUNT_ELEMENTS" => $arParams["SECTION_COUNT_ELEMENTS"],
+				"TOP_DEPTH" => 1,
+				"SECTION_URL" => $arResult["FOLDER"].$arResult["URL_TEMPLATES"]["section"],
+				"SECTION_ID" => $arSubSection["IBLOCK_SECTION_ID"],
+				"CURRENT" => $arSubSection["CODE"],
+				"ADD_SECTIONS_CHAIN" => "N",
+			),	$component
+		);?>
+	</div>
+	<div class="right_side">
+		<?$APPLICATION->IncludeComponent(
+			"bitrix:catalog.section",
+			"model",
+			Array(
+				"DISCOUNT_PRICE_CODE" => $arParams["DISCOUNT_PRICE_CODE"],
+				"ORDER_BUTTON_VIEW" => \Bitrix\Main\Config\Option::get("aspro.tires", "ORDER_BUTTON", "order"),
+				"IBLOCK_TYPE" => $arParams["IBLOCK_TYPE"],
+				"IBLOCK_ID" => $arParams["IBLOCK_ID"],
+				"ELEMENT_SORT_FIELD" => $arParams["ELEMENT_SORT_FIELD"],
+				"ELEMENT_SORT_ORDER" => $arParams["ELEMENT_SORT_ORDER"],
+				"PROPERTY_CODE" => $arParams["LIST_PROPERTY_CODE"],
+				"META_KEYWORDS" => $arParams["LIST_META_KEYWORDS"],
+				"META_DESCRIPTION" => $arParams["LIST_META_DESCRIPTION"],
+				"BROWSER_TITLE" => $arParams["LIST_BROWSER_TITLE"],
+				"INCLUDE_SUBSECTIONS" => $arParams["INCLUDE_SUBSECTIONS"],
+				"BASKET_URL" => $arParams["BASKET_URL"],
+				"ACTION_VARIABLE" => $arParams["ACTION_VARIABLE"],
+				"PRODUCT_ID_VARIABLE" => $arParams["PRODUCT_ID_VARIABLE"],
+				"SECTION_ID_VARIABLE" => $arParams["SECTION_ID_VARIABLE"],
+				"PRODUCT_QUANTITY_VARIABLE" => $arParams["PRODUCT_QUANTITY_VARIABLE"],
+				"PRODUCT_PROPS_VARIABLE" => $arParams["PRODUCT_PROPS_VARIABLE"],
+				"FILTER_NAME" => $arParams["FILTER_NAME"],
+				"CACHE_TYPE" => $arParams["CACHE_TYPE"],
+				"CACHE_TIME" => $arParams["CACHE_TIME"],
+				"CACHE_FILTER" => $arParams["CACHE_FILTER"],
+				"CACHE_GROUPS" => $arParams["CACHE_GROUPS"],
+				"SET_TITLE" => "Y",
+				"SET_STATUS_404" => $arParams["SET_STATUS_404"],
+				"DISPLAY_COMPARE" => $arParams["USE_COMPARE"],
+				"PAGE_ELEMENT_COUNT" => $arParams["PAGE_ELEMENT_COUNT"],
+				"LINE_ELEMENT_COUNT" => $arParams["LINE_ELEMENT_COUNT"],
+				"PRICE_CODE" => $arParams["PRICE_CODE"],
+				"USE_PRICE_COUNT" => $arParams["USE_PRICE_COUNT"],
+				"SHOW_PRICE_COUNT" => $arParams["SHOW_PRICE_COUNT"],
+				"MAX_COUNT" => $arParams["MAX_COUNT"],
+				"USE_REVIEW" => $arParams["USE_REVIEW"],
+				"MESSAGES_PER_PAGE" => $arParams["MESSAGES_PER_PAGE"],
+				"USE_CAPTCHA" => $arParams["USE_CAPTCHA"],
+				"REVIEW_AJAX_POST" => $arParams["REVIEW_AJAX_POST"],
+				"PATH_TO_SMILE" => $arParams["PATH_TO_SMILE"],
+				"FORUM_ID" => $arParams["FORUM_ID"],
+				"URL_TEMPLATES_READ" => $arParams["URL_TEMPLATES_READ"],
+				"SHOW_LINK_TO_FORUM" => $arParams["SHOW_LINK_TO_FORUM"],
+				"POST_FIRST_MESSAGE" => $arParams["POST_FIRST_MESSAGE"],
+				"USE_RATING" => $arParams["USE_RATING"],
+				"MATCHING_ELEMENT_PROPERTIES" => array
+					(
+						"POSADOCHNYY_DIAMETR_DISKA" => $arParams["POSADOCHNYY_DIAMETR_DISKA"],
+						"SHIRINA_DISKA" => $arParams["SHIRINA_DISKA"],
+						"DIAMETR_STUPITSY" => $arParams["DIAMETR_STUPITSY"],
+						"MEZHBOLTOVOE_RASSTOYANIE" => $arParams["MEZHBOLTOVOE_RASSTOYANIE"],
+						"VYLET_DISKA" => $arParams["VYLET_DISKA"],
+						"SHIRINA_PROFILYA" => $arParams["SHIRINA_PROFILYA"],
+						"VYSOTA_PROFILYA" => $arParams["VYSOTA_PROFILYA"],
+						"POSADOCHNYY_DIAMETR" => $arParams["POSADOCHNYY_DIAMETR"],
+						"SEZONNOST" => $arParams["SEZONNOST"],
+						"SHIPY" => $arParams["SHIPY"],
+						"RUN_ON_FLAT" => $arParams["RUN_ON_FLAT"],
+					),
+
+				"USE_STORE" => $arParams["USE_STORE"],
+				"USE_MIN_AMOUNT" => $arParams["USE_MIN_AMOUNT"],
+				"MIN_AMOUNT"=>$arParams["MIN_AMOUNT"],
+				"MAX_AMOUNT"=>$arParams["MAX_AMOUNT"],
+				"MAIN_TITLE"=>$arParams["MAIN_TITLE"],
+				"MAIN_TITLE_LIST"=>$arParams["MAIN_TITLE_LIST"],
+				"USE_ONLY_MAX_AMOUNT" => $arParams["USE_ONLY_MAX_AMOUNT"],
+
+				"DIAMETER_PROPERTY" => $diameterProperty,
+
+				"PRICE_VAT_INCLUDE" => $arParams["PRICE_VAT_INCLUDE"],
+				"USE_PRODUCT_QUANTITY" => $arParams['USE_PRODUCT_QUANTITY'],
+				"PRODUCT_PROPERTIES" => $arParams["PRODUCT_PROPERTIES"],
+
+				"DISPLAY_TOP_PAGER" => $arParams["DISPLAY_TOP_PAGER"],
+				"DISPLAY_BOTTOM_PAGER" => $arParams["DISPLAY_BOTTOM_PAGER"],
+				"PAGER_TITLE" => $arParams["PAGER_TITLE"],
+				"PAGER_SHOW_ALWAYS" => $arParams["PAGER_SHOW_ALWAYS"],
+				"PAGER_TEMPLATE" => $arParams["PAGER_TEMPLATE"],
+				"PAGER_DESC_NUMBERING" => $arParams["PAGER_DESC_NUMBERING"],
+				"PAGER_DESC_NUMBERING_CACHE_TIME" => $arParams["PAGER_DESC_NUMBERING_CACHE_TIME"],
+				"PAGER_SHOW_ALL" => $arParams["PAGER_SHOW_ALL"],
+				"ADD_SECTIONS_CHAIN" => "Y",
+				"OFFERS_CART_PROPERTIES" => $arParams["OFFERS_CART_PROPERTIES"],
+				"OFFERS_FIELD_CODE" => $arParams["LIST_OFFERS_FIELD_CODE"],
+				"OFFERS_PROPERTY_CODE" => $arParams["LIST_OFFERS_PROPERTY_CODE"],
+				"OFFERS_SORT_FIELD" => $arParams["OFFERS_SORT_FIELD"],
+				"OFFERS_SORT_ORDER" => $arParams["OFFERS_SORT_ORDER"],
+				"OFFERS_LIMIT" => $arParams["LIST_OFFERS_LIMIT"],
+
+				"SET_LAST_MODIFIED" => $arParams["SET_LAST_MODIFIED"],
+				"MESSAGE_404" => $arParams["MESSAGE_404"],
+				"SET_STATUS_404" => $arParams["SET_STATUS_404"],
+				"SHOW_404" => $arParams["SHOW_404"],
+				"FILE_404" => $arParams["FILE_404"],
+				"USE_MAIN_ELEMENT_SECTION" => $arParams["USE_MAIN_ELEMENT_SECTION"],
+
+				"SECTION_ID" => $arResult["VARIABLES"]["SECTION_ID"],
+				"SECTION_CODE" => $arResult["VARIABLES"]["SECTION_CODE"],
+				"SECTION_URL" => $arResult["FOLDER"].$arResult["URL_TEMPLATES"]["section"],
+				"SECTION_USER_FIELDS" =>array(
+					0 => "UF_NEW",
+					1 => "UF_AKCIYA",
+					2 => "UF_HIT",
+					3 => "UF_MORE_FILES"
+				),
+				"DETAIL_URL" => $arResult["FOLDER"].$arResult["URL_TEMPLATES"]["element"],
+				'CONVERT_CURRENCY' => $arParams['CONVERT_CURRENCY'],
+				'CURRENCY_ID' => $arParams['CURRENCY_ID'],
+			),
+			$component
+		);?>
+	</div>
+
+	<div style="clear:both"></div>
+<?}?>
+

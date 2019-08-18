@@ -1,0 +1,8 @@
+<?require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_before.php");?>
+<?if(isset($_POST["ACTION"]) && $_POST["ACTION"]){
+	\Bitrix\Main\Loader::includeModule('sale');
+	if(isset($_POST["ID"]) && $_POST["ID"]){
+		if($_POST["ACTION"]=="delete")
+			CSaleBasket::Delete($_POST["ID"]);
+	}
+}?>

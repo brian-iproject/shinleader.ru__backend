@@ -1,0 +1,25 @@
+<?
+$aMenuLinks = Array(
+	Array(
+		"Шины", 
+		"/catalog/tires/", 
+		Array(), 
+		Array(), 
+		"" 
+	),
+	Array(
+		"Диски", 
+		"/catalog/wheels/", 
+		Array(), 
+		Array(), 
+		"" 
+	),
+	Array(
+		"Масла", 
+		"/catalog/lube/", 
+		Array(), 
+		Array(), 
+		"" 
+	)
+);
+?>

@@ -1,0 +1,1 @@
+E-mail:	<a href="mailto:info@site.ru">sale@shinleader.ru</a>
